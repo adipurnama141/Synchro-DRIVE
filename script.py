@@ -5,7 +5,16 @@ class Room:
 		self.name = x[0]
 		self.timeOpen = x[1]
 		self.timeClosed = x[2]
-		self.availDay = x[3].split(",")
+		self.availDay = [0,0,0,0,0]
+		for elmt in x[3].split(","):
+			self.availDay[int(elmt)-1] = 1
+		self.roomUsage = []
+		for x in xrange(7,17):
+			if ((x >= int(self.timeOpen.split(".")[0])) and (x <= int(self.timeClosed.split(".")[0]))):
+				self.roomUsage.append(self.availDay)
+			else:
+				self.roomUsage.append([0,0,0,0,0])
+
 
 	def printit(self):
 		print("Ruangan : %s" %self.name)
@@ -13,6 +22,14 @@ class Room:
 		for day in self.availDay:
 			print(day, end="")
 		print("")
+		counter = 7
+		for eachHour in self.roomUsage:
+			if (counter < 10):
+				print("%s -> %s "%("0"+str(counter),str(eachHour)))
+			else:
+				print("%d -> %s "%(counter,str(eachHour)))
+			counter += 1
+
 
 class Course:
 	def __init__(self,x):
@@ -21,7 +38,16 @@ class Course:
 		self.timeOpen = x[2]
 		self.timeClosed = x[3]
 		self.timeDuration  = x[4]
-		self.availDay = x[5].split(",")
+		self.availDay = [0,0,0,0,0]
+		for elmt in x[5].split(","):
+			self.availDay[int(elmt)-1] = 1
+		self.lecturerAvailability = []
+		for x in xrange(7,17):
+			if ((x >= int(self.timeOpen.split(".")[0])) and (x <= int(self.timeClosed.split(".")[0]))):
+				self.lecturerAvailability.append(self.availDay)
+			else:
+				self.lecturerAvailability.append([0,0,0,0,0])
+
 
 	def printit(self):
 		print("Mata Kuliah : %s" %self.name)
@@ -31,6 +57,14 @@ class Course:
 		for day in self.availDay:
 			print(day, end="")
 		print("")
+		counter = 7
+		for eachHour in self.lecturerAvailability:
+			if (counter < 10):
+				print("%s -> %s "%("0"+str(counter),str(eachHour)))
+			else:
+				print("%d -> %s "%(counter,str(eachHour)))
+			counter += 1
+
 
 
 rooms = []
@@ -70,8 +104,16 @@ for content in contents:
 
 print("Room : %d " %roomCounter)
 print("Course :%d " %courseCounter)
+
+
+
+
 for room in rooms:
 	room.printit()
+	print("")
 
 for course in courses:
 	course.printit()
+	print("")
+
+
