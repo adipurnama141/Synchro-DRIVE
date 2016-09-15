@@ -141,9 +141,9 @@ def readFile(x):
 def conflictCheck():
 	totalConflict = 0
 	stepCount = 0
-	for x in xrange(0, len(courses)):
+	for x in range(0, len(courses)):
 		y = x+1
-		for y in xrange( y , len(courses)):
+		for y in range( y , len(courses)):
 			stop = 0
 			sameRoom = (courses[x].roomName == courses[y].roomName)
 			sameDay = (courses[x].assignedDay == courses[y].assignedDay)

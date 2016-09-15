@@ -9,7 +9,7 @@ class Room:
 		for elmt in x[3].split(","):
 			self.availDay[int(elmt)-1] = 1
 		self.roomUsage = []
-		for x in xrange(7,17):
+		for x in range(7,17):
 			if ((x >= int(self.timeOpen.split(".")[0])) and (x <= int(self.timeClosed.split(".")[0]))):
 				self.roomUsage.append(self.availDay)
 			else:
@@ -42,7 +42,7 @@ class Course:
 		for elmt in x[5].split(","):
 			self.availDay[int(elmt)-1] = 1
 		self.lecturerAvailability = []
-		for x in xrange(7,17):
+		for x in range(7,17):
 			if ((x >= int(self.timeOpen.split(".")[0])) and (x <= int(self.timeClosed.split(".")[0]))):
 				self.lecturerAvailability.append(self.availDay)
 			else:
