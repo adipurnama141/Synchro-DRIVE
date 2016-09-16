@@ -2,6 +2,7 @@ from __future__ import print_function
 from random import randint
 from copy import deepcopy
 import math
+import random
 
 global rooms
 global courses
@@ -66,7 +67,9 @@ class Course:
 
 
 	def allocate(self):
-		while  ((self.isLecturerAvailable() * self.isRoomAvailable()) == 0) :
+		please_execute_at_least_once = 0
+		while  ((self.isLecturerAvailable() * self.isRoomAvailable() * please_execute_at_least_once) == 0) :
+			please_execute_at_least_once = 1
 			self.assignedHour = randint(1,11)
 			self.assignedDay = randint(1,5)
 			if (not self.VIPRoom):
@@ -171,6 +174,8 @@ def isDomainCompl():
 	return ret
 
 def minTwoPower(d):
+	"2^x terkecil yang lebih besar dari d"
+
 	i = 0
 	while (d > 0):
 		d = d >> 1
@@ -197,7 +202,7 @@ def encode(max_day,max_hour):
 	return encoded
 
 def decode(encoded,max_day,max_hour):
-	"Meng decode kromsom menjadi daftar course"
+	"Men decode kromsom menjadi daftar course"
 
 	bit_room = minTwoPower(len(rooms))
 	bit_day = minTwoPower(max_day)
@@ -212,7 +217,20 @@ def decode(encoded,max_day,max_hour):
 		encoded = encoded >> bit_day
 		courses[i].assignedHour = ((1 << bit_hour)-1) & encoded
 		encoded = encoded >> bit_hour
+		courses[i].roomName = rooms[courses[i].roomIDX].name
+		courses[i].conflictFlag = 0
 		i = i+1
+
+def selectOne(people):
+	"Memilih seseorang dari populasi dengan sistem roulette wheel"
+    
+	total   = sum([c[1] for c in people])
+	pick    = random.uniform(0, total)
+	current = 0
+	for person in people:
+		current += person[1]
+		if current > pick:
+			return person
 
 def geneticAllocate():
 	"menggunakan algoritma genetik untuk mengalokasi course dengan konflik terkecil"
@@ -222,36 +240,87 @@ def geneticAllocate():
 	ideal_population = 160
 	max_hour = 11
 	max_day = 5
+	solusi = 0
+	panjang = len(courses)*minTwoPower(len(rooms))*minTwoPower(max_day)*minTwoPower(max_hour)
 
 	for i in range(0, ideal_population):
 		for course in courses:
-			course.assignedHour = randint(1,max_hour)
-			course.assignedDay = randint(1,max_day)
-			course.roomIDX = 0
 			course.allocate()
-		people.append(encode(max_day,max_hour))
-	
-	# Give fitting test for all person
-	scores = []
-	for person in people:
-		decode(person,max_day,max_hour)
-		if isDomainCompl():
-			scores.append(math.exp(conflictCheck()*(-1.0)))
-		else:
-			scores.append(0)
+		conflict = conflictCheck()
+		if (conflict == 0) and (solusi == 0):
+			solusi = encode(max_day,max_hour)
+		people.append((encode(max_day,max_hour),math.exp(conflict*(-1.0))))
 
-	print(scores)
-	# Selection Process
+	step = 0
+	while (solusi == 0) or (step > 1000000):
+		new_people = []
+		
+		while (len(new_people) < ideal_population):
+			# Selection Process
+			children1 = selectOne(people)[0]
+			children2 = selectOne(people)[0]
 
-	# Crossover Process
-	crossover_chance = 0.7
-	
-	# Mutation Process
-	mutation_chance = 0.001
+			# Crossover Process
+			crossover_chance = 0.7
+			for i in range(0,panjang):
+				isSwap = random.uniform(0, 1)
+				if isSwap < crossover_chance:
+					temp1 = (children1 >> i) & 1
+					temp2 = (children2 >> i) & 1
+					children1 = ((children1 >> (i+1)) << (i+1)) + (temp2 << i) + (children1 & (1 << (i+1)-1))
+					children2 = ((children2 >> (i+1)) << (i+1)) + (temp1 << i) + (children2 & (1 << (i+1)-1))  
 
-	# Repeat until certain new population reached
+			# Mutation Process
+			mutation_chance = 0.001
+			for i in range(0,panjang):
+				isMutate = random.uniform(0, 1)
+				if isMutate < mutation_chance:
+					children1 = ((children1 >> (i+1)) << (i+1)) + ((((children1 >> i) + 1) & 1) << i) + (children1 & (1 << (i+1)-1))
+
+			for i in range(0,panjang):
+				isMutate = random.uniform(0, 1)
+				if isMutate < mutation_chance:
+					children2 = ((children2 >> (i+1)) << (i+1)) + ((((children2 >> i) + 1) & 1) << i) + (children2 & (1 << (i+1)-1))
+
+			# Registration of new citizen
+			decode(children1,max_day,max_hour)
+			if isDomainCompl():
+				conflict = conflictCheck()
+				if (conflict == 0) and (solusi == 0):
+					solusi = person
+				new_people.append((children1,math.exp(conflict*(-1.0))))
+			else:
+				new_people.append((children1,0))
+
+			decode(children2,max_day,max_hour)
+			if isDomainCompl():
+				conflict = conflictCheck()
+				if (conflict == 0) and (solusi == 0):
+					solusi = person
+				new_people.append((children2,math.exp(conflict*(-1.0))))
+			else:
+				new_people.append((children2,0))
+
+			# Repeat until certain new population reached
+		
+		# The King is dead, long live the King
+		people = new_people
+
+		step = step+1
+		# Repeat until Helck come in
 	
-	# Repeat until Helck come in
+	if (solusi == 0):
+		print("dddddd")
+		maxChance = 0
+		for person in people:
+			if person[1] > maxChance:
+				solusi = person[0]
+				maxChance = person[1]
+		
+	decode(solusi,max_day,max_hour)
+	print(conflictCheck())
+	for course in courses:
+		course.printAllocation()
 
 readFile("tc.txt")
 geneticAllocate()
