@@ -1,6 +1,7 @@
 from __future__ import print_function
 from random import randint
 from copy import deepcopy
+import math
 
 global rooms
 global courses
@@ -154,13 +155,20 @@ def conflictCheck():
 				courses[x].conflictFlag += 1
 				courses[y].conflictFlag += 1
 				totalConflict += 1
-	print(totalConflict)
+	return totalConflict
 
 
-def isDomainCompl(str):
-	"Mengecek apakah sebuah literal string sesuai dengan domain"
+def isDomainCompl():
+	"Mengecek apakah sebuah assignment pada sesuai dengan domain"
 	
-	return true
+	ret = 1
+	for course in courses:
+		if (course.isLecturerAvailable() * course.isRoomAvailable()) == 0:
+			course.printAllocation()
+		ret *= course.isLecturerAvailable() * course.isRoomAvailable()
+
+	
+	return ret
 
 def minTwoPower(d):
 	i = 0
@@ -221,22 +229,28 @@ def geneticAllocate():
 			course.assignedDay = randint(1,max_day)
 			course.roomIDX = 0
 			course.allocate()
-		encoded = encode(max_day,max_hour)
-		if (i==0):
-			people.append(encoded)
-			for course in courses:
-				course.printAllocation()			
-			decode(people[i],max_day,max_hour)
-			print("begin\n\n\n")
-			for course in courses:
-				course.printAllocation()			
+		people.append(encode(max_day,max_hour))
 	
-	# Selection Process
+	# Give fitting test for all person
 	scores = []
+	for person in people:
+		decode(person,max_day,max_hour)
+		if isDomainCompl():
+			scores.append(math.exp(conflictCheck()*(-1.0)))
+		else:
+			scores.append(0)
 
-		
+	print(scores)
+	# Selection Process
+
 	# Crossover Process
+	crossover_chance = 0.7
+	
 	# Mutation Process
+	mutation_chance = 0.001
+
+	# Repeat until certain new population reached
+	
 	# Repeat until Helck come in
 
 readFile("tc.txt")

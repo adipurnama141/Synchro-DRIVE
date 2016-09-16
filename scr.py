@@ -155,7 +155,7 @@ def conflictCheck():
 				courses[y].conflictFlag += 1
 				totalConflict += 1
 	print(totalConflict)
-
+	return totalConflict
 
 
 
