@@ -242,17 +242,21 @@ def geneticAllocate():
 	max_day = 5
 	solusi = 0
 	panjang = len(courses)*minTwoPower(len(rooms))*minTwoPower(max_day)*minTwoPower(max_hour)
+	solusi = (0,0)
 
 	for i in range(0, ideal_population):
 		for course in courses:
 			course.allocate()
-		conflict = conflictCheck()
-		if (conflict == 0) and (solusi == 0):
-			solusi = encode(max_day,max_hour)
-		people.append((encode(max_day,max_hour),math.exp(conflict*(-1.0))))
 
+		conflict = conflictCheck()
+		chance = math.exp(conflict*(-1.0))	
+
+		if chance > solusi[1]:
+			solusi = (encode(max_day,max_hour),chance)
+		people.append((encode(max_day,max_hour),chance))
+	
 	step = 0
-	while (solusi == 0) or (step > 1000000):
+	while (solusi[1] != 1) or (step > 1000000):
 		new_people = []
 		
 		while (len(new_people) < ideal_population):
@@ -286,38 +290,33 @@ def geneticAllocate():
 			decode(children1,max_day,max_hour)
 			if isDomainCompl():
 				conflict = conflictCheck()
-				if (conflict == 0) and (solusi == 0):
-					solusi = person
-				new_people.append((children1,math.exp(conflict*(-1.0))))
+				chance = math.exp(conflict*(-1.0))
 			else:
-				new_people.append((children1,0))
+				chance = 0
+
+			if chance > solusi[1]:
+				solusi = (children1,chance)
+			new_people.append((children1,chance))
 
 			decode(children2,max_day,max_hour)
 			if isDomainCompl():
 				conflict = conflictCheck()
-				if (conflict == 0) and (solusi == 0):
-					solusi = person
-				new_people.append((children2,math.exp(conflict*(-1.0))))
+				chance = math.exp(conflict*(-1.0))
 			else:
-				new_people.append((children2,0))
+				chance = 0
 
+			if chance > solusi[1]:
+				solusi = (children2,chance)
+			new_people.append((children2,chance))
 			# Repeat until certain new population reached
 		
 		# The King is dead, long live the King
 		people = new_people
 
 		step = step+1
-		# Repeat until Helck come in
-	
-	if (solusi == 0):
-		print("dddddd")
-		maxChance = 0
-		for person in people:
-			if person[1] > maxChance:
-				solusi = person[0]
-				maxChance = person[1]
+		# If the Hero doesn't come the world will end in 1000000 days
 		
-	decode(solusi,max_day,max_hour)
+	decode(solusi[0],max_day,max_hour)
 	print(conflictCheck())
 	for course in courses:
 		course.printAllocation()
