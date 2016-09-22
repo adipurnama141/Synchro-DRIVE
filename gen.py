@@ -166,8 +166,8 @@ def isDomainCompl():
 	
 	ret = 1
 	for course in courses:
-		if (course.isLecturerAvailable() * course.isRoomAvailable()) == 0:
-			course.printAllocation()
+#		if (course.isLecturerAvailable() * course.isRoomAvailable()) == 0:
+#			course.printAllocation()
 		ret *= course.isLecturerAvailable() * course.isRoomAvailable()
 
 	
@@ -208,18 +208,16 @@ def decode(encoded,max_day,max_hour):
 	bit_day = minTwoPower(max_day)
 	bit_hour = minTwoPower(max_hour)
 
-	i = 0
-
-	while (encoded > 0):
-		courses[i].roomIDX = ((1 << bit_room)-1) & encoded
+	for course in courses:
+		course.roomIDX = (((1 << bit_room)-1) & encoded) % len(rooms)
 		encoded = encoded >> bit_room
-		courses[i].assignedDay = ((1 << bit_day)-1) & encoded
+		course.assignedDay = (((1 << bit_day)-1) & encoded) % max_day
 		encoded = encoded >> bit_day
-		courses[i].assignedHour = ((1 << bit_hour)-1) & encoded
+		course.assignedHour = (((1 << bit_hour)-1) & encoded) % max_hour
 		encoded = encoded >> bit_hour
-		courses[i].roomName = rooms[courses[i].roomIDX].name
-		courses[i].conflictFlag = 0
-		i = i+1
+	#	print(course.roomIDX)
+		course.roomName = rooms[course.roomIDX].name
+		course.conflictFlag = 0
 
 def selectOne(people):
 	"Memilih seseorang dari populasi dengan sistem roulette wheel"
@@ -231,6 +229,8 @@ def selectOne(people):
 		current += person[1]
 		if current > pick:
 			return person
+
+	return people[len(people)-1]
 
 def geneticAllocate():
 	"menggunakan algoritma genetik untuk mengalokasi course dengan konflik terkecil"
@@ -255,8 +255,9 @@ def geneticAllocate():
 			solusi = (encode(max_day,max_hour),chance)
 		people.append((encode(max_day,max_hour),chance))
 	
-	step = 0
-	while (solusi[1] != 1) or (step > 1000000):
+	step = 1
+	while (solusi[1] != 1) and (step < 1000):
+		print("step = ",step)
 		new_people = []
 		
 		while (len(new_people) < ideal_population):
