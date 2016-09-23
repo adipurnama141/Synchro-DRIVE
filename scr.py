@@ -147,8 +147,8 @@ def conflictCheck():
 			stop = 0
 			sameRoom = (courses[x].roomName == courses[y].roomName)
 			sameDay = (courses[x].assignedDay == courses[y].assignedDay)
-			intersectX = (courses[x].assignedHour >= courses[y].assignedHour) and ( courses[x].assignedHour <= (courses[y].assignedHour + int(courses[y].timeDuration)))
-			intersectY = (courses[y].assignedHour >= courses[x].assignedHour) and ( courses[y].assignedHour <= (courses[x].assignedHour + int(courses[x].timeDuration)))
+			intersectX = (courses[x].assignedHour >= courses[y].assignedHour) and ( courses[x].assignedHour < (courses[y].assignedHour + int(courses[y].timeDuration)))
+			intersectY = (courses[y].assignedHour >= courses[x].assignedHour) and ( courses[y].assignedHour < (courses[x].assignedHour + int(courses[x].timeDuration)))
 			intersects = intersectX or intersectY
 			if (intersects and sameRoom and sameDay):
 				courses[x].conflictFlag += 1

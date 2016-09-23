@@ -151,8 +151,8 @@ def conflictCheck():
 			stop = 0
 			sameRoom = (courses[x].roomName == courses[y].roomName)
 			sameDay = (courses[x].assignedDay == courses[y].assignedDay)
-			intersectX = (courses[x].assignedHour >= courses[y].assignedHour) and ( courses[x].assignedHour <= (courses[y].assignedHour + int(courses[y].timeDuration)))
-			intersectY = (courses[y].assignedHour >= courses[x].assignedHour) and ( courses[y].assignedHour <= (courses[x].assignedHour + int(courses[x].timeDuration)))
+			intersectX = (courses[x].assignedHour >= courses[y].assignedHour) and ( courses[x].assignedHour < (courses[y].assignedHour + int(courses[y].timeDuration)))
+			intersectY = (courses[y].assignedHour >= courses[x].assignedHour) and ( courses[y].assignedHour < (courses[x].assignedHour + int(courses[x].timeDuration)))
 			intersects = intersectX or intersectY
 			if (intersects and sameRoom and sameDay):
 				courses[x].conflictFlag += 1
@@ -211,9 +211,9 @@ def decode(encoded,max_day,max_hour):
 	for course in courses:
 		course.roomIDX = (((1 << bit_room)-1) & encoded) % len(rooms)
 		encoded = encoded >> bit_room
-		course.assignedDay = (((1 << bit_day)-1) & encoded) % max_day
+		course.assignedDay = (((1 << bit_day)-1) & encoded) % (max_day+1)
 		encoded = encoded >> bit_day
-		course.assignedHour = (((1 << bit_hour)-1) & encoded) % max_hour
+		course.assignedHour = (((1 << bit_hour)-1) & encoded) % (max_hour+1)
 		encoded = encoded >> bit_hour
 	#	print(course.roomIDX)
 		course.roomName = rooms[course.roomIDX].name
