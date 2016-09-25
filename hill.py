@@ -178,7 +178,6 @@ def hill():
 	'''Menggunakan algoritma hill climbing untuk memperoleh konflik sekecil mungkin'''
 	lastConflict = conflictCheck()
 	for course in courses:
-		print(course.name)
 		lecture_available = 1
 		isProbableToOptimize = 1
 		while ((conflictCheck() <= lastConflict) and (isProbableToOptimize)):
@@ -216,17 +215,6 @@ def hill():
 							course.assignedHour = last_assignedHour1
 							isProbableToOptimize=0
 
-				'''Jika sampai hari terakhir masih mungkin ada yang lebih baik, coba ganti ruangan
-				lastDay = course.availDay[-1]
-				lastHour = rooms[course.roomIDX].timeClosed
-				if ((conflictCheck() <= lastConflict) and (course.assignedHour+int(course.timeDuration) >= lastHour + 1) and (course.assignedDay == lastDay)) :
-					lastConflict = conflictCheck()
-					course.roomIDX = rooms[rooms.index(course.roomIDX)+1]
-
-					lecture_available = course.isLecturerAvailable()
-					while (not lecture_available and course.assignedHour<=rooms[couser.roomIDX].timeClosed):
-						lecture_available = course.isLecturerAvailable()
-						course.assignedHour += 1'''
 			else:
 				course.assignedHour = lastAssignedHour
 				isProbableToOptimize=0
