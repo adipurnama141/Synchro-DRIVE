@@ -176,48 +176,61 @@ def isDomainCompl():
 
 def hill():
 	'''Menggunakan algoritma hill climbing untuk memperoleh konflik sekecil mungkin'''
-	lastConflict = conflictCheck()
 	for course in courses:
-		lecture_available = 1
-		isProbableToOptimize = 1
-		while ((conflictCheck() <= lastConflict) and (isProbableToOptimize)):
-			lastConflict = conflictCheck()
-			lastAssignedHour = course.assignedHour
-			if (course.assignedDay not in course.availDay):
-					course.assignedDay = course.availDay[0]
-
-			course.assignedHour += 1
-
-			lecture_available = course.isLecturerAvailable()
-
-			while (not lecture_available and course.assignedHour<=rooms[course.roomIDX].timeClosed):
-				course.assignedHour += 1
-				lecture_available = course.isLecturerAvailable()
-
-			if (lecture_available) :
-				'''Jika pada hari yang sama masih mungkin lebih baik sampai ruangan ditutup, coba hari berikutnya'''
-				if ((conflictCheck() <= lastConflict) and (course.assignedHour+int(course.timeDuration) >= (rooms[course.roomIDX].timeClosed + 1))):
+		lastConflict = conflictCheck()
+		iterate = 0
+		while (conflictCheck() <= lastConflict and iterate < 5) :
+			while (course.assignedHour+int(course.timeDuration) <= course.timeClosed):
+				if (conflictCheck() <= lastConflict) :
 					lastConflict = conflictCheck()
-					nextIdxDay = course.availDay.index(course.assignedDay)+1
-					while (nextIdxDay<len(course.availDay)):
-						if (course.availDay[nextIdxDay] != 1):
-							nextIdxDay +=1
+					#geser jam sampai lecturer ada
+					lastAssignedHour = course.assignedHour
+					course.assignedHour += 1
+					lecture_available = course.isLecturerAvailable()
+					while (not lecture_available and course.assignedHour+int(course.timeDuration) <= course.timeClosed):
+						course.assignedHour +=1
+				else:
+					course.assignedHour = lastAssignedHour
+					break
 
-					if (nextIdxDay<len(course.availDay)) :
-						course.assignedDay = course.availDay[nextIdxDay]
-						course.assignedHour = rooms[course.roomIDX].timeOpen
-						lecture_available = course.isLecturerAvailable()
-						last_assignedHour1 = course.assignedHour
-						while (not lecture_available and course.assignedHour<=rooms[course.roomIDX].timeClosed):
-							lecture_available = course.isLecturerAvailable()
-							course.assignedHour += 1
-						if (not course.isLecturerAvailable()) :
-							course.assignedHour = last_assignedHour1
-							isProbableToOptimize=0
+			if (conflictCheck() <= lastConflict) :
+				lastConflict = conflictCheck()
+				#cari hari selanjutnya
+				nextday = course.assignedDay+1
+				if (nextday == 6) :
+						nextday = 1
+
+				while (course.availDay[nextday]!=1) :
+					nextday += 1
+					if (nextday == 6) :
+						nextday = 1
+
+				if (nextday!=course.assignedDay):
+					lastAssignedDay = course.assignedDay
+					course.assignedDay = nextday
+					if (conflictCheck() <= lastConflict) :
+						if (rooms[course.roomIDX].timeOpen <= course.timeOpen and rooms[course.roomIDX].timeClosed >= course.timeClosed) :
+							course.assignedHour = course.timeOpen
+					else:
+						course.assignedDay = lastAssignedDay
+
 
 			else:
 				course.assignedHour = lastAssignedHour
-				isProbableToOptimize=0
+
+			iterate +=1
 
 readFile("tc.txt")
+for course in courses:
+	course.allocate()
+
+print("BEFORE HILL\n")
+for course in courses:
+	course.printAllocation()
+print("Conflict: "+str(conflictCheck())+"\n")
+
+print("AFTER HILL\n")
 hill()
+for course in courses:
+	course.printAllocation()
+print("Conflict: "+str(conflictCheck()))
