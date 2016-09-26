@@ -177,6 +177,7 @@ def isDomainCompl():
 def hill():
 	'''Menggunakan algoritma hill climbing untuk memperoleh konflik sekecil mungkin'''
 	for course in courses:
+		course.conflictFlag=0
 		lastConflict = conflictCheck()
 		iterate = 0
 		while (conflictCheck() <= lastConflict and iterate < 5) :
