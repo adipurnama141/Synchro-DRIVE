@@ -212,6 +212,8 @@ def hill():
 					if (conflictCheck() <= lastConflict) :
 						if (rooms[course.roomIDX].timeOpen <= course.timeOpen and rooms[course.roomIDX].timeClosed >= course.timeClosed) :
 							course.assignedHour = course.timeOpen
+							if (not (course.isLecturerAvailable() and course.isRoomAvailable())):
+								course.assignedHour=lastAssignedHour
 					else:
 						course.assignedDay = lastAssignedDay
 
