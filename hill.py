@@ -188,13 +188,16 @@ def hill():
 	#alokasi awal
 	for course in courses:
 		course.allocate()
-	conflictCheck()
 	#algoritma hill
 	for course in courses:
 		conflictCheck()
 		lastConflict = countTotalConflict()
 		iterate = 0
+		#menghitung hari room yang tersedia
+
 		while (countTotalConflict() <= lastConflict and iterate < 5) :
+			#selama masih mungkin digeser, geser jamnya
+			lastAssignedHour = course.assignedHour
 			while (course.assignedHour+int(course.timeDuration) <= course.timeClosed and course.isRoomAvailable()):
 				conflictCheck()
 				if (countTotalConflict() <= lastConflict) :
@@ -205,11 +208,15 @@ def hill():
 					lecture_available = course.isLecturerAvailable()
 					while (not lecture_available and course.assignedHour+int(course.timeDuration) <= course.timeClosed):
 						course.assignedHour +=1
+					if (not lecture_available):
+						course.assignedHour=lastAssignedHour
 				else:
 					course.assignedHour = lastAssignedHour
 					break
-			if (not (course.isLecturerAvailable() and course.isRoomAvailable())):
-								course.assignedHour=lastAssignedHour
+
+			if (not course.isRoomAvailable()):
+					course.assignedHour=lastAssignedHour
+
 			conflictCheck()					
 			if (countTotalConflict() <= lastConflict) :
 				lastConflict = countTotalConflict()
@@ -218,7 +225,7 @@ def hill():
 				if (nextday == 6) :
 						nextday = 1
 
-				while (course.availDay[nextday]!=1) :
+				while (course.availDay[nextday]!=1 or rooms[course.roomIDX].availDay[nextday]!=1) :
 					nextday += 1
 					if (nextday == 6) :
 						nextday = 1
