@@ -146,6 +146,10 @@ def readFile(x):
 def conflictCheck():
 	totalConflict = 0
 	stepCount = 0
+	'''
+	for course in courses:
+		course.conflictFlag=0'''
+
 	for x in range(0, len(courses)):
 		y = x+1
 		for y in range( y , len(courses)):
@@ -173,17 +177,22 @@ def isDomainCompl():
 
 	
 	return ret
+def countTotalConflict():
+	conflict = 0
+	for course in courses:
+		conflict += course.conflictFlag
+	return conflict
 
 def hill():
 	'''Menggunakan algoritma hill climbing untuk memperoleh konflik sekecil mungkin'''
 	for course in courses:
 		course.conflictFlag=0
-		lastConflict = conflictCheck()
+		lastConflict = countTotalConflict()
 		iterate = 0
-		while (conflictCheck() <= lastConflict and iterate < 5) :
-			while (course.assignedHour+int(course.timeDuration) <= course.timeClosed):
-				if (conflictCheck() <= lastConflict) :
-					lastConflict = conflictCheck()
+		while (countTotalConflict() <= lastConflict and iterate < 5) :
+			while (course.assignedHour+int(course.timeDuration) <= course.timeClosed and course.isRoomAvailable()):
+				if (countTotalConflict() <= lastConflict) :
+					lastConflict = countTotalConflict()
 					#geser jam sampai lecturer ada
 					lastAssignedHour = course.assignedHour
 					course.assignedHour += 1
@@ -193,9 +202,11 @@ def hill():
 				else:
 					course.assignedHour = lastAssignedHour
 					break
-
-			if (conflictCheck() <= lastConflict) :
-				lastConflict = conflictCheck()
+			if (not (course.isLecturerAvailable() and course.isRoomAvailable())):
+								course.assignedHour=lastAssignedHour
+								
+			if (countTotalConflict() <= lastConflict) :
+				lastConflict = countTotalConflict()
 				#cari hari selanjutnya
 				nextday = course.assignedDay+1
 				if (nextday == 6) :
@@ -209,7 +220,7 @@ def hill():
 				if (nextday!=course.assignedDay):
 					lastAssignedDay = course.assignedDay
 					course.assignedDay = nextday
-					if (conflictCheck() <= lastConflict) :
+					if (countTotalConflict() <= lastConflict) :
 						if (rooms[course.roomIDX].timeOpen <= course.timeOpen and rooms[course.roomIDX].timeClosed >= course.timeClosed) :
 							course.assignedHour = course.timeOpen
 							if (not (course.isLecturerAvailable() and course.isRoomAvailable())):
@@ -226,14 +237,15 @@ def hill():
 readFile("tc.txt")
 for course in courses:
 	course.allocate()
+conflictCheck()
 
 print("BEFORE HILL\n")
 for course in courses:
 	course.printAllocation()
-print("Conflict: "+str(conflictCheck())+"\n")
-
+conf1 = str(countTotalConflict())
+print(conf1)
 print("AFTER HILL\n")
 hill()
 for course in courses:
 	course.printAllocation()
-print("Conflict: "+str(conflictCheck()))
+print("Conflict before : "+conf1+" Conflict after: "+str(countTotalConflict()))
