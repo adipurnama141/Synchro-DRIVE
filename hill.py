@@ -146,9 +146,8 @@ def readFile(x):
 def conflictCheck():
 	totalConflict = 0
 	stepCount = 0
-	'''
 	for course in courses:
-		course.conflictFlag=0'''
+		course.conflictFlag=0
 
 	for x in range(0, len(courses)):
 		y = x+1
@@ -185,12 +184,19 @@ def countTotalConflict():
 
 def hill():
 	'''Menggunakan algoritma hill climbing untuk memperoleh konflik sekecil mungkin'''
+	
+	#alokasi awal
 	for course in courses:
-		course.conflictFlag=0
+		course.allocate()
+	conflictCheck()
+	#algoritma hill
+	for course in courses:
+		conflictCheck()
 		lastConflict = countTotalConflict()
 		iterate = 0
 		while (countTotalConflict() <= lastConflict and iterate < 5) :
 			while (course.assignedHour+int(course.timeDuration) <= course.timeClosed and course.isRoomAvailable()):
+				conflictCheck()
 				if (countTotalConflict() <= lastConflict) :
 					lastConflict = countTotalConflict()
 					#geser jam sampai lecturer ada
@@ -204,7 +210,7 @@ def hill():
 					break
 			if (not (course.isLecturerAvailable() and course.isRoomAvailable())):
 								course.assignedHour=lastAssignedHour
-								
+			conflictCheck()					
 			if (countTotalConflict() <= lastConflict) :
 				lastConflict = countTotalConflict()
 				#cari hari selanjutnya
@@ -220,6 +226,7 @@ def hill():
 				if (nextday!=course.assignedDay):
 					lastAssignedDay = course.assignedDay
 					course.assignedDay = nextday
+					conflictCheck()
 					if (countTotalConflict() <= lastConflict) :
 						if (rooms[course.roomIDX].timeOpen <= course.timeOpen and rooms[course.roomIDX].timeClosed >= course.timeClosed) :
 							course.assignedHour = course.timeOpen
@@ -233,19 +240,29 @@ def hill():
 				course.assignedHour = lastAssignedHour
 
 			iterate +=1
+			conflictCheck()
 
+def countRoomUsed() :
+	roomUsed = []
+	for course in courses:
+		if (course.roomName not in roomUsed) :
+			roomUsed.append(course.roomName)
+
+	return len(roomUsed)
+
+#--------------------#
+
+#main program
+#reading file
 readFile("tc.txt")
-for course in courses:
-	course.allocate()
-conflictCheck()
-
-print("BEFORE HILL\n")
-for course in courses:
-	course.printAllocation()
-conf1 = str(countTotalConflict())
-print(conf1)
-print("AFTER HILL\n")
+#doing hill algorithm
 hill()
+#print schedule
+print("--------------SCHEDULE--------------")
+print("====================================")
 for course in courses:
 	course.printAllocation()
-print("Conflict before : "+conf1+" Conflict after: "+str(countTotalConflict()))
+#print total conflict
+print("Total conflicts : "+str(countTotalConflict()))
+#print percentage used room
+print("Room used : "+str(countRoomUsed()*100/len(rooms))+" %")
