@@ -258,7 +258,8 @@ def geneticAllocate():
 	
 	step = 1
 	while (solusi[1] != 1) and (step < 20):
-		print("step = ",step)
+	#	print("step = ",step)
+		print('.', end="",flush=True)
 		new_people = []
 		
 		while (len(new_people) < ideal_population):
@@ -328,9 +329,29 @@ def geneticAllocate():
 		# If the Hero doesn't come the world will end in 1000000 days
 
 	decode(solusi[0],max_day,max_hour)
-	print(conflictCheck())
-	for course in courses:
-		course.printAllocation()
+	print("")
 
+def countRoomUsed() :
+	roomUsed = []
+	for course in courses:
+		if (course.roomName not in roomUsed) :
+			roomUsed.append(course.roomName)
+
+	return len(roomUsed)
+
+#--------------------#
+
+#main program
+#reading file
 readFile("tc.txt")
+#doing hill algorithm
 geneticAllocate()
+#print schedule
+print("--------------SCHEDULE--------------")
+print("====================================")
+for course in courses:
+	course.printAllocation()
+#print total conflict
+print("Total conflicts : "+str(conflictCheck()))
+#print percentage used room
+print("Room used : "+str(countRoomUsed()*100/len(rooms))+" %")
