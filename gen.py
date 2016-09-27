@@ -263,6 +263,11 @@ def geneticAllocate():
 		person = encode(max_day,max_hour)
 		people.append((person,chance))
 	
+	#To benchmark, free these lines of code
+	#decode(solusi[0],max_day,max_hour)
+	#conflictCheck()
+	#print(countTotalConflict())
+
 	step = 1
 	while (solusi[1] != 1) and (step < 20):
 	#	print("step = ",step)
