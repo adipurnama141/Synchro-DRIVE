@@ -141,6 +141,8 @@ def readFile(x):
 def conflictCheck():
 	totalConflict = 0
 	stepCount = 0
+	for course in courses:
+		course.conflictFlag = 0
 	for x in range(0, len(courses)):
 		y = x+1
 		for y in range( y , len(courses)):
