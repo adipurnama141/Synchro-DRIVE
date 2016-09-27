@@ -69,6 +69,7 @@ class Course:
 	def allocate(self):
 		please_execute_at_least_once = 0
 		while  ((self.isLecturerAvailable() * self.isRoomAvailable() * please_execute_at_least_once) == 0) :
+		#	print(self.isLecturerAvailable(),self.isRoomAvailable())
 			please_execute_at_least_once = 1
 			self.assignedHour = randint(1,11)
 			self.assignedDay = randint(1,5)
@@ -200,7 +201,6 @@ def encode(max_day,max_hour):
 		d += bit_day
 		encoded += course.assignedHour << d
 		d += bit_hour
-
 	return encoded
 
 def decode(encoded,max_day,max_hour):
@@ -217,7 +217,6 @@ def decode(encoded,max_day,max_hour):
 		encoded = encoded >> bit_day
 		course.assignedHour = (((1 << bit_hour)-1) & encoded) % (max_hour+1)
 		encoded = encoded >> bit_hour
-	#	print(course.roomIDX)
 		course.roomName = rooms[course.roomIDX].name
 
 def selectOne(people):
@@ -242,7 +241,7 @@ def geneticAllocate():
 	max_hour = 11
 	max_day = 5
 	solusi = 0
-	panjang = len(courses)*minTwoPower(len(rooms))*minTwoPower(max_day)*minTwoPower(max_hour)
+	panjang = len(courses)*(minTwoPower(len(rooms))+minTwoPower(max_day)+minTwoPower(max_hour))
 	solusi = (0,0)
 
 	for i in range(0, ideal_population):
@@ -254,10 +253,11 @@ def geneticAllocate():
 
 		if chance > solusi[1]:
 			solusi = (encode(max_day,max_hour),chance)
-		people.append((encode(max_day,max_hour),chance))
+		person = encode(max_day,max_hour)
+		people.append((person,chance))
 	
 	step = 1
-	while (solusi[1] != 1) and (step < 1000):
+	while (solusi[1] != 1) and (step < 20):
 		print("step = ",step)
 		new_people = []
 		
@@ -265,7 +265,7 @@ def geneticAllocate():
 			# Selection Process
 			children1 = selectOne(people)[0]
 			children2 = selectOne(people)[0]
-
+			
 			# Crossover Process
 			crossover_chance = 0.7
 			for i in range(0,panjang):
@@ -273,20 +273,29 @@ def geneticAllocate():
 				if isSwap < crossover_chance:
 					temp1 = (children1 >> i) & 1
 					temp2 = (children2 >> i) & 1
-					children1 = ((children1 >> (i+1)) << (i+1)) + (temp2 << i) + (children1 & (1 << (i+1)-1))
-					children2 = ((children2 >> (i+1)) << (i+1)) + (temp1 << i) + (children2 & (1 << (i+1)-1))  
+					if temp1 != temp2:
+						children1 = children1 - (temp1 << i) + (temp2 << i)
+						children2 = children2 - (temp2 << i) + (temp1 << i)
+#					children1 = ((children1 >> (i+1)) << (i+1)) + (temp2 << i) + (children1 & ((1 << (i+1))-1))
+#					children2 = ((children2 >> (i+1)) << (i+1)) + (temp1 << i) + (children2 & ((1 << (i+1))-1)) 
 
 			# Mutation Process
 			mutation_chance = 0.001
 			for i in range(0,panjang):
 				isMutate = random.uniform(0, 1)
 				if isMutate < mutation_chance:
-					children1 = ((children1 >> (i+1)) << (i+1)) + ((((children1 >> i) + 1) & 1) << i) + (children1 & (1 << (i+1)-1))
+					temp1 = (children1 >> i) & 1
+					temp2 = (temp1 ^ 1) & 1 
+					children1 = children1 - (temp1 << i) + (temp2 << i)
+				#	children1 = ((children1 >> (i+1)) << (i+1)) + ((((children1 >> i) + 1) & 1) << i) + (children1 & (1 << (i+1)-1))
 
 			for i in range(0,panjang):
 				isMutate = random.uniform(0, 1)
 				if isMutate < mutation_chance:
-					children2 = ((children2 >> (i+1)) << (i+1)) + ((((children2 >> i) + 1) & 1) << i) + (children2 & (1 << (i+1)-1))
+					temp1 = (children2 >> i) & 1
+					temp2 = (temp1 ^ 1) & 1 
+					children2 = children2 - (temp1 << i) + (temp2 << i)
+				#	children2 = ((children2 >> (i+1)) << (i+1)) + ((((children2 >> i) + 1) & 1) << i) + (children2 & (1 << (i+1)-1))
 
 			# Registration of new citizen
 			decode(children1,max_day,max_hour)
@@ -311,13 +320,13 @@ def geneticAllocate():
 				solusi = (children2,chance)
 			new_people.append((children2,chance))
 			# Repeat until certain new population reached
-		
+			
 		# The King is dead, long live the King
 		people = new_people
 
 		step = step+1
 		# If the Hero doesn't come the world will end in 1000000 days
-		
+
 	decode(solusi[0],max_day,max_hour)
 	print(conflictCheck())
 	for course in courses:
