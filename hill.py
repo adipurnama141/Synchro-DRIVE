@@ -146,6 +146,9 @@ def readFile(x):
 def conflictCheck():
 	totalConflict = 0
 	stepCount = 0
+	for course in courses:
+		course.conflictFlag=0
+
 	for x in range(0, len(courses)):
 		y = x+1
 		for y in range( y , len(courses)):
@@ -173,51 +176,93 @@ def isDomainCompl():
 
 	
 	return ret
+def countTotalConflict():
+	conflict = 0
+	for course in courses:
+		conflict += course.conflictFlag
+	return conflict
 
 def hill():
 	'''Menggunakan algoritma hill climbing untuk memperoleh konflik sekecil mungkin'''
-	lastConflict = conflictCheck()
+	
+	#alokasi awal
 	for course in courses:
-		lecture_available = 1
-		isProbableToOptimize = 1
-		while ((conflictCheck() <= lastConflict) and (isProbableToOptimize)):
-			lastConflict = conflictCheck()
-			lastAssignedHour = course.assignedHour
-			if (course.assignedDay not in course.availDay):
-					course.assignedDay = course.availDay[0]
+		course.allocate()
+	conflictCheck()
+	#algoritma hill
+	for course in courses:
+		conflictCheck()
+		lastConflict = countTotalConflict()
+		iterate = 0
+		while (countTotalConflict() <= lastConflict and iterate < 5) :
+			while (course.assignedHour+int(course.timeDuration) <= course.timeClosed and course.isRoomAvailable()):
+				conflictCheck()
+				if (countTotalConflict() <= lastConflict) :
+					lastConflict = countTotalConflict()
+					#geser jam sampai lecturer ada
+					lastAssignedHour = course.assignedHour
+					course.assignedHour += 1
+					lecture_available = course.isLecturerAvailable()
+					while (not lecture_available and course.assignedHour+int(course.timeDuration) <= course.timeClosed):
+						course.assignedHour +=1
+				else:
+					course.assignedHour = lastAssignedHour
+					break
+			if (not (course.isLecturerAvailable() and course.isRoomAvailable())):
+								course.assignedHour=lastAssignedHour
+			conflictCheck()					
+			if (countTotalConflict() <= lastConflict) :
+				lastConflict = countTotalConflict()
+				#cari hari selanjutnya
+				nextday = course.assignedDay+1
+				if (nextday == 6) :
+						nextday = 1
 
-			course.assignedHour += 1
+				while (course.availDay[nextday]!=1) :
+					nextday += 1
+					if (nextday == 6) :
+						nextday = 1
 
-			lecture_available = course.isLecturerAvailable()
+				if (nextday!=course.assignedDay):
+					lastAssignedDay = course.assignedDay
+					course.assignedDay = nextday
+					conflictCheck()
+					if (countTotalConflict() <= lastConflict) :
+						if (rooms[course.roomIDX].timeOpen <= course.timeOpen and rooms[course.roomIDX].timeClosed >= course.timeClosed) :
+							course.assignedHour = course.timeOpen
+							if (not (course.isLecturerAvailable() and course.isRoomAvailable())):
+								course.assignedHour=lastAssignedHour
+					else:
+						course.assignedDay = lastAssignedDay
 
-			while (not lecture_available and course.assignedHour<=rooms[course.roomIDX].timeClosed):
-				course.assignedHour += 1
-				lecture_available = course.isLecturerAvailable()
-
-			if (lecture_available) :
-				'''Jika pada hari yang sama masih mungkin lebih baik sampai ruangan ditutup, coba hari berikutnya'''
-				if ((conflictCheck() <= lastConflict) and (course.assignedHour+int(course.timeDuration) >= (rooms[course.roomIDX].timeClosed + 1))):
-					lastConflict = conflictCheck()
-					nextIdxDay = course.availDay.index(course.assignedDay)+1
-					while (nextIdxDay<len(course.availDay)):
-						if (course.availDay[nextIdxDay] != 1):
-							nextIdxDay +=1
-
-					if (nextIdxDay<len(course.availDay)) :
-						course.assignedDay = course.availDay[nextIdxDay]
-						course.assignedHour = rooms[course.roomIDX].timeOpen
-						lecture_available = course.isLecturerAvailable()
-						last_assignedHour1 = course.assignedHour
-						while (not lecture_available and course.assignedHour<=rooms[course.roomIDX].timeClosed):
-							lecture_available = course.isLecturerAvailable()
-							course.assignedHour += 1
-						if (not course.isLecturerAvailable()) :
-							course.assignedHour = last_assignedHour1
-							isProbableToOptimize=0
 
 			else:
 				course.assignedHour = lastAssignedHour
-				isProbableToOptimize=0
 
+			iterate +=1
+			conflictCheck()
+
+def countRoomUsed() :
+	roomUsed = []
+	for course in courses:
+		if (course.roomName not in roomUsed) :
+			roomUsed.append(course.roomName)
+
+	return len(roomUsed)
+
+#--------------------#
+
+#main program
+#reading file
 readFile("tc.txt")
+#doing hill algorithm
 hill()
+#print schedule
+print("--------------SCHEDULE--------------")
+print("====================================")
+for course in courses:
+	course.printAllocation()
+#print total conflict
+print("Total conflicts : "+str(countTotalConflict()))
+#print percentage used room
+print("Room used : "+str(countRoomUsed()*100/len(rooms))+" %")
