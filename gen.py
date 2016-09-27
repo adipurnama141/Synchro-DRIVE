@@ -176,6 +176,12 @@ def isDomainCompl():
 	
 	return ret
 
+def countTotalConflict():
+	conflict = 0
+	for course in courses:
+		conflict += course.conflictFlag
+	return conflict
+
 def minTwoPower(d):
 	"2^x terkecil yang lebih besar dari d"
 
@@ -248,7 +254,8 @@ def geneticAllocate():
 		for course in courses:
 			course.allocate()
 
-		conflict = conflictCheck()
+		conflictCheck()
+		conflict = countTotalConflict()
 		chance = math.exp(conflict*(-1.0))	
 
 		if chance > solusi[1]:
@@ -301,7 +308,8 @@ def geneticAllocate():
 			# Registration of new citizen
 			decode(children1,max_day,max_hour)
 			if isDomainCompl():
-				conflict = conflictCheck()
+				conflictCheck()
+				conflict = countTotalConflict()
 				chance = math.exp(conflict*(-1.0))
 			else:
 				chance = 0
@@ -312,7 +320,8 @@ def geneticAllocate():
 
 			decode(children2,max_day,max_hour)
 			if isDomainCompl():
-				conflict = conflictCheck()
+				conflictCheck()
+				conflict = countTotalConflict()
 				chance = math.exp(conflict*(-1.0))
 			else:
 				chance = 0
@@ -329,6 +338,7 @@ def geneticAllocate():
 		# If the Hero doesn't come the world will end in 1000000 days
 
 	decode(solusi[0],max_day,max_hour)
+	conflictCheck()
 	print("")
 
 def countRoomUsed() :
@@ -352,6 +362,6 @@ print("====================================")
 for course in courses:
 	course.printAllocation()
 #print total conflict
-print("Total conflicts : "+str(conflictCheck()))
+print("Total conflicts : "+str(countTotalConflict()))
 #print percentage used room
 print("Room used : "+str(countRoomUsed()*100/len(rooms))+" %")
