@@ -264,13 +264,14 @@ def geneticAllocate():
 		people.append((person,chance))
 	
 	#To benchmark, free these lines of code
-	#decode(solusi[0],max_day,max_hour)
-	#conflictCheck()
-	#print(countTotalConflict())
+#	decode(solusi[0],max_day,max_hour)
+#	conflictCheck()
+#	print(countTotalConflict())
 
 	step = 1
 	while (solusi[1] != 1) and (step < 20):
 	#	print("step = ",step)
+		valedictorian = 9999
 		print('.', end="",flush=True)
 		new_people = []
 		
@@ -315,6 +316,8 @@ def geneticAllocate():
 			if isDomainCompl():
 				conflictCheck()
 				conflict = countTotalConflict()
+				if valedictorian > conflict:
+					valedictorian = conflict
 				chance = math.exp(conflict*(-1.0))
 			else:
 				chance = 0
@@ -327,6 +330,8 @@ def geneticAllocate():
 			if isDomainCompl():
 				conflictCheck()
 				conflict = countTotalConflict()
+				if valedictorian > conflict:
+					valedictorian = conflict
 				chance = math.exp(conflict*(-1.0))
 			else:
 				chance = 0
@@ -340,6 +345,7 @@ def geneticAllocate():
 		people = new_people
 
 		step = step+1
+	#	print(valedictorian)
 		# If the Hero doesn't come the world will end in 1000000 days
 
 	decode(solusi[0],max_day,max_hour)
