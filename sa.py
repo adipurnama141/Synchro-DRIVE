@@ -161,6 +161,19 @@ def conflictCheck():
 				totalConflict += 1
 	return totalConflict
 
+def countTotalConflict():
+	conflict = 0
+	for course in courses:
+		conflict += course.conflictFlag
+	return conflict
+
+def countRoomUsed() :
+	roomUsed = []
+	for course in courses:
+		if (course.roomName not in roomUsed) :
+			roomUsed.append(course.roomName)
+
+	return len(roomUsed)
 
 def isDomainCompl():
 	"Mengecek apakah sebuah assignment pada sesuai dengan domain"
@@ -177,17 +190,15 @@ def isDomainCompl():
 def simulatedAnneiling(temperature,ratio) :
     for course in courses :
         course.allocate()
-    conflictCheck()
-    for course in courses :
-        course.printAllocation()
     Ep = conflictCheck()
     T = temperature
     while (T > 0.0001) :
         tempCourses = []
         tempCourses = deepcopy(courses)
-        for course in courses :
-            if (course.conflictFlag != 0) :
-                course.allocate()
+        first = random.randint(0,len(courses)-1)
+        second = random.randint(0,len(courses)-1)
+        courses[first].allocate()
+        courses[second].allocate()
         En = conflictCheck()
         if (En == 0) :
             break;
@@ -202,18 +213,16 @@ def simulatedAnneiling(temperature,ratio) :
         else :
             Ep = En
         T = T*ratio
-    print("Ep ",Ep)
-    print("En ",En)
-    ap = conflictCheck()
-    print("Conflict yeay : ",ap)
         
             
 readFile("tc.txt")
-simulatedAnneiling(100,0.90)
-kp = conflictCheck()
-ap = conflictCheck()
-print("Conflict : ",kp)
-print("Conflict : ",ap)
-print("=============")
+simulatedAnneiling(10,0.999)
+#print schedule
+print("--------------SCHEDULE--------------")
+print("====================================")
 for course in courses :
     course.printAllocation()
+#print total conflict
+print("Total conflicts : "+str(countTotalConflict()))
+#print percentage used room
+print("Room used : "+str(countRoomUsed()*100/len(rooms))+" %")
