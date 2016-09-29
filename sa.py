@@ -120,11 +120,6 @@ class Course:
 		print("Room Available     : %d" %self.isRoomAvailable())
 		print("conflictFlag       : %d" %self.conflictFlag)
 		print("")
-    
-    #def deepcopy(self):
-        
-
-
 
 def readFile(x):
 	with open(x) as f:
@@ -182,6 +177,9 @@ def isDomainCompl():
 def simulatedAnneiling(temperature,ratio) :
     for course in courses :
         course.allocate()
+    conflictCheck()
+    for course in courses :
+        course.printAllocation()
     Ep = conflictCheck()
     T = temperature
     while (T > 0.0001) :
@@ -191,20 +189,31 @@ def simulatedAnneiling(temperature,ratio) :
             if (course.conflictFlag != 0) :
                 course.allocate()
         En = conflictCheck()
-        if (En < Ep) :
-            probability = math.exp((En - Ep)/T)
+        if (En == 0) :
+            break;
+        elif (Ep < En) :
+            probability = math.exp((Ep - En)/T)
             if ((random.random() - probability) > 0.0001) :
                 for x in range(0, len(courses)) :
-                    courses[x].assignedHour = tempCourses[x].assignedHour
-                    courses[x].assignedDay = tempCourses[x].assignedDay
-                En = Ep
-            T = T*ratio
+                    #print("kembali")
+                    courses[x] = deepcopy(tempCourses[x])
+            else :
+                Ep = En
+        else :
+            Ep = En
+        T = T*ratio
+    print("Ep ",Ep)
+    print("En ",En)
+    ap = conflictCheck()
+    print("Conflict yeay : ",ap)
         
             
-            
-        
 readFile("tc.txt")
-simulatedAnneiling(500,0.999)
-conflictCheck()
+simulatedAnneiling(100,0.90)
+kp = conflictCheck()
+ap = conflictCheck()
+print("Conflict : ",kp)
+print("Conflict : ",ap)
+print("=============")
 for course in courses :
     course.printAllocation()
