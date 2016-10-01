@@ -1,0 +1,261 @@
+$def with (courses, rooms)
+
+<html>
+    <head>
+        <title>Gothons Of Planet Percal #25</title>
+        <script>
+
+        function insertAfter(newNode, referenceNode) {
+    		referenceNode.parentNode.insertBefore(newNode, referenceNode.nextSibling);
+		}
+
+        window.onload = function() {
+
+        	var jsondata_courses = document.getElementById('jsondata_courses').innerHTML;
+        	var jsondata_rooms = document.getElementById('jsondata_rooms').innerHTML;
+
+        	courses = JSON.parse(jsondata_courses);
+        	rooms = JSON.parse(jsondata_rooms);
+
+        	console.log(rooms);	
+        	console.log(courses);
+
+        	
+           	var head = document.getElementById("1");
+        	var tail;
+        	document.getElementById("1h").innerHTML = rooms[0].name;
+        	for (var i = 1 ; i < rooms.length ; i++){
+        		console.log(head);
+        		tail  = head.cloneNode(true);
+        		var num = i+1;
+        		tail.id = "" + num;
+        		console.log("yeyye");
+        		insertAfter(tail,head);
+        		head = tail;
+        	}
+
+        	for (var i=0 ; i < rooms.length ; i++){
+        		
+        		//proses hari
+        		for (var j =1 ; j <= 5 ; j++) {
+        			if (rooms[i].availDay[j] == 0) {
+        				console.log("heooro")
+        				var code = "h" + j;
+        				console.log(code)
+        				var targets = document.getElementsByClassName(code);
+
+        				for (var k=0 ; k <targets.length ; k++) {
+        					targets[k].className += ' kelastutup'
+        				}
+        			}
+        		}
+
+        		//proses jam
+        		var openTime = rooms[i].timeOpen;
+        		var closedTime = rooms[i].timeClosed;
+
+        		for (var j =1 ; j <=11 ; j++){
+        			if  ((j < openTime) || (j > closedTime)) {
+        				var code = "j" + j;
+        				var target = document.getElementsByClassName(code)
+        				target[0].className += ' kelastutup';
+        			}
+        		}
+
+
+
+        	}
+        	
+
+
+
+        	for( var i= 0 ; i < courses.length ; i++) {
+        		//console.log(courses[i]);
+        		var day = courses[i].assignedDay;
+        		var hour = courses[i].assignedHour;
+        		var SKS = courses[i].timeDuration
+        		console.log(courses[i].name + "---" + day + "--" + hour + "--" + SKS)
+
+        		for (var j = 0 ; j < SKS ; j++) {
+        			var temp = hour + j
+        			var assignation = "" + day + temp;
+        			console.log(assignation)
+        			document.getElementById(assignation).innerHTML += courses[i].name;
+        		}
+
+        		
+        	}
+
+        	
+
+        }
+        </script>
+
+
+ <style>
+
+
+
+table {
+ width: 540px;
+  height: 413px;
+  text-align: center;
+  border: 1px solid #cacaca;
+  table-layout: fixed;
+  padding: 0 13px;
+  display: inline-block;
+}
+
+body {
+  font-family : Helvetica;
+}
+
+
+td {
+	padding:8px;
+}
+
+.judul {
+	font-size: 36px;
+  padding: 17px;
+}
+
+.kelastutup {
+	background-color:#cacaca;
+}
+
+
+.header{
+  background-color: rgb(0, 136, 170);
+  color: white;
+}
+
+.alocator  {
+	margin: 0 auto;
+}
+
+
+
+
+ </style>
+
+    </head>
+<body>
+
+
+    <span id="jsondata_courses" style="display:none;">$courses</span>
+    <span id="jsondata_rooms" style="display:none;">$rooms</span>
+
+<div class="alocator">
+
+<table id="1">
+	<tr>
+		<td class="judul" id="1h" colspan="6"> 7010 </td>
+	</tr>
+	<tr class="header">
+		<td>Jam</td>
+		<td>Senin</td>
+		<td>Selasa</td>
+		<td>Rabu</td>
+		<td>Kamis</td>
+		<td>Jumat</td>
+	</tr>
+	<tr class="j1">
+		<td>07.00</td>
+		<td class="h1" id="11"></td>
+		<td class="h2" id="21"></td>
+		<td  class="h3" id="31"></td>
+		<td  class="h4" id="41"></td>
+		<td  class="h5" id="51"></td>
+	</tr>
+	<tr class="j2">
+		<td>08.00</td>
+		<td class="h1" id="12"></td>
+		<td  class="h2" id="22"></td>
+		<td  class="h3" id="32"></td>
+		<td  class="h4" id="42"></td>
+		<td  class="h5" id="52"></td>
+	</tr>
+	<tr class="j3">
+		<td>09.00</td>
+		<td class="h1" id="13"></td>
+		<td  class="h2" id="23"></td>
+		<td  class="h3" id="33"></td>
+		<td  class="h4" id="43"></td>
+		<td  class="h5" id="53"></td>
+		
+	</tr>
+	<tr class="j4">
+		<td>10.00</td>
+		<td class="h1" id="14"></td>
+		<td  class="h2" id="24"></td>
+		<td  class="h3" id="34"></td>
+		<td  class="h4" id="44"></td>
+		<td  class="h5" id="54"></td>
+	</tr>
+	<tr class="j5">
+		<td>11.00</td>
+		<td class="h1" id="15"></td>
+		<td  class="h2" id="25"></td>
+		<td  class="h3" id="35"></td>
+		<td  class="h4" id="45"></td>
+		<td  class="h5" id="55"></td>
+
+	</tr>
+
+	<tr class="j6">
+		<td>12.00</td>
+		<td class="h1" id="16"></td>
+		<td  class="h2" id="26"></td>
+		<td  class="h3" id="36"></td>
+		<td  class="h4" id="46"></td>
+		<td  class="h5" id="56"></td>
+	</tr>
+	<tr class="j7">
+		<td>13.00</td>
+		<td class="h1" id="17"></td>
+		<td  class="h2" id="27"></td>
+		<td  class="h3" id="37"></td>
+		<td  class="h4" id="47"></td>
+		<td  class="h5" id="57"></td>
+	</tr>
+	<tr class="j8">
+		<td>14.00</td>
+		<td class="h1" id="18"></td>
+		<td  class="h2" id="28"></td>
+		<td  class="h3" id="38"></td>
+		<td  class="h4" id="48"></td>
+		<td  class="h5" id="58"></td>
+
+	</tr>
+	<tr class="j9">
+		<td>15.00</td>
+		<td class="h1" id="19"></td>
+		<td  class="h2" id="29"></td>
+		<td class="h3" id="39"></td>
+		<td  class="h4" id="49"></td>
+		<td  class="h5" id="59"></td>
+	</tr>
+	<tr class="j10">
+		<td>16.00</td>
+		<td class="h1" id="110"></td>
+		<td  class="h2" id="210"></td>
+		<td class="h3" id="310"></td>
+		<td class="h4" id="410"></td>
+		<td  class="h5" id="510"></td>
+	</tr>
+	<tr class="j11">
+		<td>17.00</td>
+		<td class="h1" id="111"></td>
+		<td  class="h2" id="211"></td>
+		<td class="h3" id="311"></td>
+		<td class="h4" id="411"></td>
+		<td  class="h5" id="511"></td>
+	</tr>
+
+</table>
+
+</div>
+
+</body>
+</html>
