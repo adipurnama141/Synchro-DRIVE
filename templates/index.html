@@ -1,0 +1,602 @@
+$def with (courses, rooms, code)
+
+<html>
+    <head>
+        <title>SynchroDRIVE - Alocator 1.4.1</title>
+        <script>
+
+        var roomAllocation = {}
+
+        function insertAfter(newNode, referenceNode) {
+            referenceNode.parentNode.insertBefore(newNode, referenceNode.nextSibling);
+        }
+
+        function transfer(id_tabel_asal,sel_asal,id_tabel_tujuan,sel_tujuan) {
+            var node_tabel_asal = document.getElementById(id_tabel_asal)
+            var node_sel_asal = node_tabel_asal.getElementsByClassName(sel_asal)[0];
+            var node_tabel_tujuan = document.getElementById(id_tabel_tujuan);
+            var node_sel_tujuan = node_tabel_tujuan.getElementsByClassName(sel_tujuan)[0];
+
+            plainHTML = node_sel_asal.innerHTML;
+            warna = node_sel_asal.attributes[1].nodeValue;
+
+            node_sel_tujuan.innerHTML = plainHTML;
+            node_sel_tujuan.setAttribute("style",warna);
+            node_sel_asal.innerHTML = " ";
+            node_sel_asal.removeAttribute("style");
+        }
+
+
+        var isLoaded = 0;
+        var classes;
+        var plainHTML;
+
+        var id_tabel_asal;
+        var id_tabel_tujuan;
+        var sel_tujuan;
+        var sel_asal;
+        var class_sel_asal;
+        var class_warna;
+        var class_seluruh_sel_asal;
+        var warna;
+        var class_alokasi_blok;
+
+        function pindahRumah (class_alokasi_blok,id_tabel_tujuan,sel_tujuan){
+            var nodes = document.getElementsByClassName(class_alokasi_blok);
+            for (var i = 0 ; i < nodes.length ; i++) {
+                var koordinat_target = nodes[i].className.split(" ")[1];
+                var node_sel_asal = document.getElementsByClassName(koordinat_target)[0];
+                var id_tabel_asal = node_sel_asal.offsetParent.id;
+                var class_list = node_sel_asal.className;
+                var sel_asal = class_list.split(" ")[1];
+                transfer(id_tabel_asal,sel_asal,id_tabel_tujuan,sel_tujuan)
+                sel_tujuan = parseInt(sel_tujuan) + 1;
+                sel_tujuan = "" + sel_tujuan;
+                console.log("sel tujuan" + sel_tujuan);
+            }
+
+
+        }
+
+
+        window.onclick = function(e) {
+             if (isLoaded == 0) {
+                id_tabel_asal = e.target.offsetParent.id;
+                class_seluruh_sel_asal =  e.srcElement.className;
+                class_alokasi_blok = class_seluruh_sel_asal.split(" ")[2];
+                sel_asal = class_seluruh_sel_asal.split(" ")[1];
+                console.log("class alokasi : " + class_alokasi_blok);
+
+
+                isLoaded = 1;
+            }
+            else {
+                id_tabel_tujuan = e.target.offsetParent.id;
+                class_list =  e.target.className;
+                sel_tujuan = class_list.split(" ")[1];
+                console.log(id_tabel_asal + "-"+ sel_asal + "-"+ id_tabel_tujuan + "-"+sel_tujuan)
+                pindahRumah(class_alokasi_blok,id_tabel_tujuan,sel_tujuan)
+                //transfer(id_tabel_asal,sel_asal,id_tabel_tujuan,sel_tujuan)
+                isLoaded = 0;
+            }
+        }
+
+       
+        
+
+
+
+
+        window.onmouseover = function(e)  {
+            console.log(e);
+            var class_list = e.target.className;
+            var hoveredClass= class_list.split(" ")[1];
+            var slotDetail = class_list.split(" ")[1];
+            var r_slotDetail = "" + slotDetail +"0n";
+            var room_detail = e.target.offsetParent.id;
+            var real_room = 0 + room_detail - 1;
+            console.log("room" + room_detail + real_room)
+            var numberOfConflict =  roomAllocation[r_slotDetail] ;
+
+            if (numberOfConflict == null) {
+                document.getElementById("detail").innerHTML = "";
+            }
+            else {
+                document.getElementById("detail").innerHTML = "Conflict : " + numberOfConflict + " [";
+                for ( var i=1 ; i <= (numberOfConflict+1) ; i++ ) {
+                    var target = slotDetail + real_room + i;
+                    console.log("target saya:" + target)
+                    document.getElementById("detail").innerHTML += roomAllocation[target];
+                    if (i < (numberOfConflict+1) ) {
+                        document.getElementById("detail").innerHTML += " x ";
+                    }
+                    else {
+                        document.getElementById("detail").innerHTML += " ]";
+                    }
+                }
+            
+            }
+
+
+
+
+
+            
+            console.log(slotDetail);
+        }
+
+
+
+        window.onload = function() {
+
+            //Ambil dari python masukan ke javascript
+            var jsondata_courses = document.getElementById('jsondata_courses').innerHTML;
+            var jsondata_rooms = document.getElementById('jsondata_rooms').innerHTML;
+            courses = JSON.parse(jsondata_courses);
+            rooms = JSON.parse(jsondata_rooms);
+
+            var counterUsedSlot = 0;
+            var counterAvailableSlot = 55;
+            var totalConflict = 0;
+        
+            //duplikat_tabel_seperlunya
+            var head = document.getElementById("1");
+            var tail;
+            head.getElementsByTagName("th")[0].innerHTML = rooms[0].name;
+            for (var i = 1 ; i < rooms.length ; i++){
+                tail  = head.cloneNode(true);
+                var num = i+1;
+                tail.id = "" + num;
+                tail.getElementsByTagName("th")[0].innerHTML = rooms[i].name;
+                insertAfter(tail,head);
+                head = tail;
+            }
+
+            //Untuk setiap ruangan, lakukan preprocess
+            for (var i=0 ; i < rooms.length ; i++){  
+                counterAvailableSlot += 55;    
+                var idxtabel = i + 1;
+                var idx = "" + idxtabel;
+                var tabelKita = document.getElementById(idx); 
+
+                //proses hari buka
+                for (var j =1 ; j <= 5 ; j++) {
+                    if (rooms[i].availDay[j] == 0) {
+                        var code = "h" + j;
+                        var targets = tabelKita.getElementsByClassName(code);
+                        for (var k=0 ; k <targets.length ; k++) {
+                            targets[k].className += ' kelastutup'
+                        }
+                    }
+                }
+
+                //proses jam buka
+                var openTime = rooms[i].timeOpen;
+                var closedTime = rooms[i].timeClosed;
+                for (var j =1 ; j <=11 ; j++){
+                    if  ((j < openTime) || (j > closedTime)) {
+                        var code = "j" + j;
+                        var target = tabelKita.getElementsByClassName(code)
+                        target[0].className += ' kelastutup';
+                    }
+                }
+            }
+            
+
+            
+            var conflict ={}
+
+            //untuk setiap ruangan, alokasikan
+            for( var i= 0 ; i < courses.length ; i++) {
+
+                var day = courses[i].assignedDay;
+                var hour = courses[i].assignedHour;
+                var SKS = courses[i].timeDuration;
+                var room = courses[i].roomIDX;
+                var roomHTML = room + 1;
+                var s_roomHTML = "" +roomHTML;
+
+                var tabelKita = document.getElementById(s_roomHTML); 
+
+
+                // Untuk setiap matkul, loop hingga SKS lengkap
+                for (var j = 0 ; j < SKS ; j++) {
+                    var temp = hour + j
+                    
+
+                    //dekoding alokasi : hari-jam-ruangan
+                    var hari_jam = "" + day + temp;
+                    var hari_jam_ruangan = "" + day + temp + room;
+                    
+                    //jika hasil alokasi masih bisa ditempati
+                    if (typeof roomAllocation[hari_jam_ruangan] === "undefined") {
+                        
+
+                        //penanda , blok ini diisi 1 matkul
+                        roomAllocation[hari_jam_ruangan] = 1
+
+                        var alokasi_nama_encoded = hari_jam_ruangan + roomAllocation[hari_jam_ruangan]
+
+                        //penanda, nama matkulnya
+                        roomAllocation[alokasi_nama_encoded] = courses[i].name;
+
+                        //tulis di tabel
+                        tabelKita.getElementsByClassName(hari_jam)[0].innerHTML = courses[i].name;
+
+                        //penanda satu slot terisi
+                        counterUsedSlot += 1;
+
+                        //pasang penanda satu blok matkul
+                        var classID = "c" + i;
+                        tabelKita.getElementsByClassName(hari_jam)[0].className += " " + classID;
+
+                    } 
+                    else {
+                        totalConflict +=1;
+                        roomAllocation[hari_jam_ruangan] += 1
+                        var num_conflict = hari_jam_ruangan + "n";
+                        if (roomAllocation[hari_jam_ruangan] == 2) {
+                            roomAllocation[num_conflict] = 1;
+                        }
+                        else {
+                            roomAllocation[num_conflict] += 1;
+                        }
+                        var alokasi_nama_encoded = hari_jam_ruangan + roomAllocation[hari_jam_ruangan]
+                        roomAllocation[alokasi_nama_encoded] = courses[i].name;
+                        console.log("Alokasi kamar" + alokasi_nama_encoded)
+                        tabelKita.getElementsByClassName(hari_jam)[0].innerHTML = "CONFLICT"
+                        
+                    }   
+                    
+                }
+                
+            }
+            effectivity = counterUsedSlot / counterAvailableSlot * 100;
+            document.getElementById("eff").innerHTML = (Math.round(effectivity * 100) / 100) + " %";
+            document.getElementById("ncon").innerHTML = totalConflict;
+            console.log(roomAllocation);
+
+            var colorPallete = [];
+
+            for(i = 0; i < 360; i += 360 / courses.length) {
+                var c = {};
+                c.hue = i;
+                c.saturation = 90 + Math.random() * 10;
+                c.lightness = 50 + Math.random() * 10;
+                var colorString = "hsl(" + c.hue + ", " + c.saturation +"%, " + c.lightness +"%)";
+                colorPallete.push(colorString);
+            }
+
+            console.log(colorPallete);
+
+            for(var i = 0 ; i <courses.length ; i++) {
+                var target = "c" + i;
+                var targetElements = document.getElementsByClassName(target);
+                for (var j = 0 ; j < targetElements.length ; j++) {
+                    targetElements[j].style["background-color"] = colorPallete[i];
+                }
+            }
+
+        }
+        </script>
+
+
+ <style>
+
+
+.aktif {
+    background-color: black !important;
+    color:white !important;
+}
+
+
+
+
+
+
+table {
+ width: 589px;
+  height: 413px;
+  text-align: center;
+  border: 1px solid #cacaca;
+  table-layout: fixed;
+  padding: 0 13px;
+  display: inline-block;
+  cursor: -webkit-grab !important;
+}
+
+body {
+  font-family : Helvetica;
+}
+
+
+td {
+    padding:8px;
+}
+
+td:hover {
+    border: 2px solid black;
+}
+
+.judul {
+    font-size: 36px;
+  padding: 17px;
+}
+
+.kelastutup {
+    background-color:#cacaca;
+}
+
+
+.header{
+  background-color: rgb(0, 136, 170);
+  color: white;
+}
+
+.alocator  {
+  
+  width: 1185px;
+  margin: 90px auto;
+}
+
+
+.white {
+    background-color: rgb(158, 200, 210) !important;
+}
+
+
+.topmenu {
+    position: fixed;
+  top: 0px;
+  left: 0px;
+  width: 100%;
+  height: 74px;
+  background-color: rgb(0, 136, 170);
+  color :white;
+}
+
+#ncon {
+      position: fixed;
+  right: 68px;
+  top: 0px;
+  padding: 19px 28px;
+  background-color: rgb(15, 66, 97);
+  margin: 0;
+}
+
+#eff {
+    position: fixed;
+  right: 142px;
+  font-size: 26px;
+  padding: 21px 20px;
+  margin: 0;
+}
+
+#detail {
+      font-size: 19px;
+  font-weight: 100;
+  position: fixed;
+  margin: 0;
+  padding: 12px 20px;
+  left: 300px;
+  top: 13px;
+  /* background-color: rgb(15, 66, 97); */
+  color: rgb(255, 255, 255);
+}
+
+.topmenu header {
+    position: fixed;
+  width: 149px;
+  top: 15px;
+  left: 61px;
+}
+
+
+
+.topmenu img {
+    position: fixed;
+  width: 157px;
+  top: 13px;
+  left: 70px;
+}
+
+
+#hill {
+    background-image: url("/static/iconbar.png");
+  position: fixed;
+  /* top: 20px; */
+  width: 59px;
+  height: 50px;
+  background-position: 2px;
+  padding: 12px 0;
+  right: 385px;
+
+}
+
+.mnorm {
+    background-image: url("/static/iconbar-inactive.png") !important;
+}
+
+.mnorm:hover {
+    background-image: url("/static/iconbar.png") !important;
+}
+
+
+
+
+.mnorm_act {
+    background-image: url("/static/iconbar.png") !important;
+}
+
+
+
+#SA {
+    background-image: url("/static/iconbar-inactive.png");
+  position: fixed;
+  /* top: 20px; */
+  width: 59px;
+  height: 50px;
+  background-position: -52px;
+  padding: 12px 0;
+  right: 327px;
+}
+
+#genetic{
+    background-image: url("/static/iconbar-inactive.png");
+  position: fixed;
+  /* top: 20px; */
+  width: 59px;
+  height: 50px;
+  background-position: -98px;
+  padding: 12px 0;
+  right: 268px
+}
+
+ </style>
+
+    </head>
+<body>
+
+
+    <span id="jsondata_courses" style="display:none;">$courses</span>
+    <span id="jsondata_rooms" style="display:none;">$rooms</span>
+
+<div class="topmenu">
+    <img src="/static/logo.png">
+    <h1 id="eff"></h1>
+    <h1 id="ncon"></h1>
+$if code == 1:    
+    <a href="hill"> <div id="hill" class="mnorm_act"></div> </a>
+    <a href="sa"> <div id="SA" class="mnorm"> </div> </a>
+    <a href="genetic"> <div id="genetic" class="mnorm"> </div> </a>
+$elif code == 2: 
+    <a href="hill"> <div id="hill" class="mnorm"></div> </a>
+    <a href="sa"> <div id="SA" class="mnorm_act"> </div> </a>
+    <a href="genetic"> <div id="genetic" class="mnorm"> </div> </a>
+$else:
+    <a href="hill"> <div id="hill" class="mnorm"></div> </a>
+    <a href="sa"> <div id="SA" class="mnorm"> </div> </a>
+    <a href="genetic"> <div id="genetic" class="mnorm_act"> </div> </a>
+
+<h2 id="detail"></h2>
+
+</div>
+
+
+
+
+
+<div class="alocator">
+<table id="1">
+    <tr>
+        <th class="judul  1h" colspan="6"> 7010 </th>
+    </tr>
+    <tr class="header">
+        <td>Jam</td>
+        <td>Senin</td>
+        <td>Selasa</td>
+        <td>Rabu</td>
+        <td>Kamis</td>
+        <td>Jumat</td>
+    </tr>
+    <tr class="j1">
+        <td class="white" >07.00</td>
+        <td class="h1 11"></td>
+        <td class="h2 21"></td>
+        <td  class="h3 31"></td>
+        <td  class="h4 41"></td>
+        <td  class="h5 51"></td>
+    </tr>
+    <tr class="j2">
+        <td draggable="true" class="white" >08.00</td>
+        <td class="h1 12"></td>
+        <td  class="h2 22"></td>
+        <td  class="h3 32"></td>
+        <td  class="h4 42"></td>
+        <td  class="h5 52"></td>
+    </tr>
+    <tr class="j3">
+        <td class="white" >09.00</td>
+        <td class="h1 13"></td>
+        <td  class="h2 23"></td>
+        <td  class="h3 33"></td>
+        <td  class="h4 43"></td>
+        <td  class="h5 53"></td>
+        
+    </tr>
+    <tr class="j4">
+        <td class="white" >10.00</td>
+        <td class="h1 14"></td>
+        <td  class="h2 24"></td>
+        <td  class="h3 34"></td>
+        <td  class="h4 44"></td>
+        <td  class="h5 54"></td>
+    </tr>
+    <tr class="j5">
+        <td class="white" >11.00</td>
+        <td class="h1 15"></td>
+        <td  class="h2 25"></td>
+        <td  class="h3 35"></td>
+        <td  class="h4 45"></td>
+        <td  class="h5 55"></td>
+
+    </tr>
+
+    <tr class="j6">
+        <td class="white" >12.00</td>
+        <td class="h1 16"></td>
+        <td  class="h2 26"></td>
+        <td  class="h3 36"></td>
+        <td  class="h4 46"></td>
+        <td  class="h5 56"></td>
+    </tr>
+    <tr class="j7">
+        <td class="white" >13.00</td>
+        <td class="h1 17"></td>
+        <td  class="h2 27"></td>
+        <td  class="h3 37"></td>
+        <td  class="h4 47"></td>
+        <td  class="h5 57"></td>
+    </tr>
+    <tr class="j8">
+        <td class="white" >14.00</td>
+        <td class="h1 18"></td>
+        <td  class="h2 28"></td>
+        <td  class="h3 38"></td>
+        <td  class="h4 48"></td>
+        <td  class="h5 58"></td>
+
+    </tr>
+    <tr class="j9">
+        <td class="white" >15.00</td>
+        <td class="h1 19"></td>
+        <td  class="h2 29"></td>
+        <td class="h3 39"></td>
+        <td  class="h4 49"></td>
+        <td  class="h5 59"></td>
+    </tr>
+    <tr class="j10">
+        <td class="white" >16.00</td>
+        <td class="h1 110"></td>
+        <td  class="h2 210"></td>
+        <td class="h3 310"></td>
+        <td class="h4 410"></td>
+        <td  class="h5 510"></td>
+    </tr>
+    <tr class="j11">
+        <td class="white" >17.00</td>
+        <td class="h1 111"></td>
+        <td  class="h2 211"></td>
+        <td class="h3 311"></td>
+        <td class="h4 411"></td>
+        <td  class="h5 511"></td>
+    </tr>
+
+</table>
+</div>
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,28 @@
+ @font-face {
+  font-family: 'Raleway'; /*a name to be used later*/
+  src: url('Raleway-Regular.ttf'); /*URL to font*/
+}
+
+@font-face {
+    font-family: 'Montserrat'; /*a name to be used later*/
+    src: url('Montserrat-Regular.ttf'); /*URL to font*/
+}
+
+table {
+  width: 500px;
+  height: 413px;
+  text-align: center;
+  border: 1px solid #cacaca;
+  table-layout: fixed;
+}
+
+body {
+  font-family : Raleway;
+}
+
+
+
+
+.header{
+  background-color: rgb(0, 136, 170);
+}
