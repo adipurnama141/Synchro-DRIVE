@@ -1,8 +1,8 @@
-$def with (courses, rooms)
+$def with (courses, rooms, code)
 
 <html>
     <head>
-        <title>Gothons Of Planet Percal #25</title>
+        <title>SynchroDRIVE - Alocator 1.4.1</title>
         <script>
 
         var roomAllocation = {}
@@ -15,7 +15,7 @@ $def with (courses, rooms)
         window.onmouseover = function(e)  {
             console.log(e);
             var class_list = e.target.className;
-            console.log(class_list);
+            var hoveredClass= class_list.split(" ")[1];
             var slotDetail = class_list.split(" ")[1];
             var r_slotDetail = "" + slotDetail +"0n";
             var numberOfConflict =  roomAllocation[r_slotDetail] ;
@@ -35,7 +35,10 @@ $def with (courses, rooms)
                         document.getElementById("detail").innerHTML += " ]";
                     }
                 }
+            
             }
+
+
 
 
 
@@ -154,9 +157,9 @@ $def with (courses, rooms)
                     else {
                         totalConflict +=1;
                         roomAllocation[c_assignation] += 1
-
+                        var num_conflict = c_assignation + "n";
                         if (roomAllocation[c_assignation] == 2) {
-                            var num_conflict = c_assignation + "n";
+                            
                             roomAllocation[num_conflict] = 1;
                         }
                         else {
@@ -181,11 +184,39 @@ $def with (courses, rooms)
             document.getElementById("eff").innerHTML = (Math.round(effectivity * 100) / 100) + " %";
             document.getElementById("ncon").innerHTML = totalConflict;
             console.log(roomAllocation);
+
+            var colorPallete = [];
+
+            for(i = 0; i < 360; i += 360 / courses.length) {
+                var c = {};
+                c.hue = i;
+                c.saturation = 90 + Math.random() * 10;
+                c.lightness = 50 + Math.random() * 10;
+                var colorString = "hsl(" + c.hue + ", " + c.saturation +"%, " + c.lightness +"%)";
+                colorPallete.push(colorString);
+            }
+
+            console.log(colorPallete);
+
+            for(var i = 0 ; i <courses.length ; i++) {
+                var target = "c" + i;
+                var targetElements = document.getElementsByClassName(target);
+                for (var j = 0 ; j < targetElements.length ; j++) {
+                    targetElements[j].style["background-color"] = colorPallete[i];
+                }
+            }
+
         }
         </script>
 
 
  <style>
+
+
+.aktif {
+    background-color: black !important;
+    color:white !important;
+}
 
 
 
@@ -275,10 +306,81 @@ td:hover {
   position: fixed;
   margin: 0;
   padding: 12px 20px;
-  left: 157px;
+  left: 300px;
   top: 13px;
   /* background-color: rgb(15, 66, 97); */
   color: rgb(255, 255, 255);
+}
+
+.topmenu header {
+    position: fixed;
+  width: 149px;
+  top: 15px;
+  left: 61px;
+}
+
+.c0:hover {
+    background-color: black !important;
+    color:white !important;
+}
+
+.topmenu img {
+    position: fixed;
+  width: 157px;
+  top: 13px;
+  left: 70px;
+}
+
+
+#hill {
+    background-image: url("/static/iconbar.png");
+  position: fixed;
+  /* top: 20px; */
+  width: 59px;
+  height: 50px;
+  background-position: 2px;
+  padding: 12px 0;
+  right: 385px;
+
+}
+
+.mnorm {
+    background-image: url("/static/iconbar-inactive.png") !important;
+}
+
+.mnorm:hover {
+    background-image: url("/static/iconbar.png") !important;
+}
+
+
+
+
+.mnorm_act {
+    background-image: url("/static/iconbar.png") !important;
+}
+
+
+
+#SA {
+    background-image: url("/static/iconbar-inactive.png");
+  position: fixed;
+  /* top: 20px; */
+  width: 59px;
+  height: 50px;
+  background-position: -52px;
+  padding: 12px 0;
+  right: 327px;
+}
+
+#genetic{
+    background-image: url("/static/iconbar-inactive.png");
+  position: fixed;
+  /* top: 20px; */
+  width: 59px;
+  height: 50px;
+  background-position: -98px;
+  padding: 12px 0;
+  right: 268px
 }
 
  </style>
@@ -291,8 +393,22 @@ td:hover {
     <span id="jsondata_rooms" style="display:none;">$rooms</span>
 
 <div class="topmenu">
+    <img src="/static/logo.png">
     <h1 id="eff"></h1>
     <h1 id="ncon"></h1>
+$if code == 1:    
+    <a href="hill"> <div id="hill" class="mnorm_act"></div> </a>
+    <a href="sa"> <div id="SA" class="mnorm"> </div> </a>
+    <a href="genetic"> <div id="genetic" class="mnorm"> </div> </a>
+$elif code == 2: 
+    <a href="hill"> <div id="hill" class="mnorm"></div> </a>
+    <a href="sa"> <div id="SA" class="mnorm_act"> </div> </a>
+    <a href="genetic"> <div id="genetic" class="mnorm"> </div> </a>
+$else:
+    <a href="hill"> <div id="hill" class="mnorm"></div> </a>
+    <a href="sa"> <div id="SA" class="mnorm"> </div> </a>
+    <a href="genetic"> <div id="genetic" class="mnorm_act"> </div> </a>
+
 <h2 id="detail">asasa</h2>
 
 </div>

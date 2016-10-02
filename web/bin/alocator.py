@@ -253,6 +253,34 @@ def hill():
 			conflictCheck()
 
 
+def simulatedAnneiling(temperature,ratio) :
+    for course in courses :
+        course.allocate()
+    Ep = conflictCheck()
+    T = temperature
+    while (T > 0.0001) :
+        tempCourses = []
+        tempCourses = deepcopy(courses)
+        first = random.randint(0,len(courses)-1)
+        second = random.randint(0,len(courses)-1)
+        courses[first].allocate()
+        courses[second].allocate()
+        En = conflictCheck()
+        if (En == 0) :
+            break;
+        elif (Ep < En) :
+            probability = math.exp((Ep - En)/T)
+            if ((random.random() - probability) > 0.0001) :
+                for x in range(0, len(courses)) :
+                    #print("kembali")
+                    courses[x] = deepcopy(tempCourses[x])
+            else :
+                Ep = En
+        else :
+            Ep = En
+        T = T*ratio
+
+
 def countRoomUsed() :
 	roomUsed = []
 	for course in courses:
@@ -262,6 +290,202 @@ def countRoomUsed() :
 	return len(roomUsed)
 
 
+# Algoritma Genetik
+# -----------------------------------------------------------
+
+def minTwoPower(d):
+	"2^x terkecil yang lebih besar dari d"
+
+	i = 0
+	while (d > 0):
+		d = d >> 1
+		i = i+1
+	return i
+
+def encode(max_day,max_hour):
+	"Meng encode daftar course menjadi sebuah kromosom"
+
+	d = 0
+	encoded = 0
+	bit_room = minTwoPower(len(rooms))
+	bit_day = minTwoPower(max_day)
+	bit_hour = minTwoPower(max_hour)
+
+	for course in courses:
+		encoded += course.roomIDX << d
+		d += bit_room
+		encoded += course.assignedDay << d
+		d += bit_day
+		encoded += course.assignedHour << d
+		d += bit_hour
+	return encoded
+
+def decode(encoded,max_day,max_hour):
+	"Men decode kromsom menjadi daftar course"
+
+	bit_room = minTwoPower(len(rooms))
+	bit_day = minTwoPower(max_day)
+	bit_hour = minTwoPower(max_hour)
+
+	for course in courses:
+		course.roomIDX = (((1 << bit_room)-1) & encoded) % len(rooms)
+		encoded = encoded >> bit_room
+		course.assignedDay = (((1 << bit_day)-1) & encoded) % (max_day+1)
+		encoded = encoded >> bit_day
+		course.assignedHour = (((1 << bit_hour)-1) & encoded) % (max_hour+1)
+		encoded = encoded >> bit_hour
+		course.roomName = rooms[course.roomIDX].name
+
+def selectOne(people):
+	"Memilih seseorang dari populasi dengan sistem roulette wheel"
+    
+	total   = sum([c[1] for c in people])
+	pick    = random.uniform(0, total)
+	current = 0
+	for person in people:
+		current += person[1]
+		if current > pick:
+			return person
+
+	return people[len(people)-1]
+
+def geneticAllocate():
+	"menggunakan algoritma genetik untuk mengalokasi course dengan konflik terkecil"
+	
+	# Adam & Eve Generation : magic number = 160
+	people = []
+	ideal_population = 160
+	max_hour = 11
+	max_day = 5
+	solusi = 0
+	panjang = len(courses)*(minTwoPower(len(rooms))+minTwoPower(max_day)+minTwoPower(max_hour))
+	solusi = (0,0)
+
+	for i in range(0, ideal_population):
+		for course in courses:
+			course.allocate()
+
+		conflictCheck()
+		conflict = countTotalConflict()
+		chance = math.exp(conflict*(-1.0))	
+
+		if chance > solusi[1]:
+			solusi = (encode(max_day,max_hour),chance)
+		person = encode(max_day,max_hour)
+		people.append((person,chance))
+	
+	#To benchmark, free these lines of code
+#	decode(solusi[0],max_day,max_hour)
+#	conflictCheck()
+#	print(countTotalConflict())
+
+	step = 1
+	while (solusi[1] != 1) and (step < 20):
+	#	print("step = ",step)
+		valedictorian = 9999
+		print('.', end="")
+		new_people = []
+		
+		while (len(new_people) < ideal_population):
+			# Selection Process
+			children1 = selectOne(people)[0]
+			children2 = selectOne(people)[0]
+			
+			# Crossover Process
+			crossover_chance = 0.7
+			for i in range(0,panjang):
+				isSwap = random.uniform(0, 1)
+				if isSwap < crossover_chance:
+					temp1 = (children1 >> i) & 1
+					temp2 = (children2 >> i) & 1
+					if temp1 != temp2:
+						children1 = children1 - (temp1 << i) + (temp2 << i)
+						children2 = children2 - (temp2 << i) + (temp1 << i)
+#					children1 = ((children1 >> (i+1)) << (i+1)) + (temp2 << i) + (children1 & ((1 << (i+1))-1))
+#					children2 = ((children2 >> (i+1)) << (i+1)) + (temp1 << i) + (children2 & ((1 << (i+1))-1)) 
+
+			# Mutation Process
+			mutation_chance = 0.001
+			for i in range(0,panjang):
+				isMutate = random.uniform(0, 1)
+				if isMutate < mutation_chance:
+					temp1 = (children1 >> i) & 1
+					temp2 = (temp1 ^ 1) & 1 
+					children1 = children1 - (temp1 << i) + (temp2 << i)
+				#	children1 = ((children1 >> (i+1)) << (i+1)) + ((((children1 >> i) + 1) & 1) << i) + (children1 & (1 << (i+1)-1))
+
+			for i in range(0,panjang):
+				isMutate = random.uniform(0, 1)
+				if isMutate < mutation_chance:
+					temp1 = (children2 >> i) & 1
+					temp2 = (temp1 ^ 1) & 1 
+					children2 = children2 - (temp1 << i) + (temp2 << i)
+				#	children2 = ((children2 >> (i+1)) << (i+1)) + ((((children2 >> i) + 1) & 1) << i) + (children2 & (1 << (i+1)-1))
+
+			# Registration of new citizen
+			decode(children1,max_day,max_hour)
+			if isDomainCompl():
+				conflictCheck()
+				conflict = countTotalConflict()
+				if valedictorian > conflict:
+					valedictorian = conflict
+				chance = math.exp(conflict*(-1.0))
+			else:
+				chance = 0
+
+			if chance > solusi[1]:
+				solusi = (children1,chance)
+			new_people.append((children1,chance))
+
+			decode(children2,max_day,max_hour)
+			if isDomainCompl():
+				conflictCheck()
+				conflict = countTotalConflict()
+				if valedictorian > conflict:
+					valedictorian = conflict
+				chance = math.exp(conflict*(-1.0))
+			else:
+				chance = 0
+
+			if chance > solusi[1]:
+				solusi = (children2,chance)
+			new_people.append((children2,chance))
+			# Repeat until certain new population reached
+			
+		# The King is dead, long live the King
+		people = new_people
+
+		step = step+1
+	#	print(valedictorian)
+		# If the Hero doesn't come the world will end in 1000000 days
+
+	decode(solusi[0],max_day,max_hour)
+	conflictCheck()
+	print("")
+
+def countRoomUsed() :
+	roomUsed = []
+	for course in courses:
+		if (course.roomName not in roomUsed) :
+			roomUsed.append(course.roomName)
+
+	return len(roomUsed)
+
+#--------------------#
+
+
+
+
+
+
+
+
+
+
+
+
+# Untuk keperluan output ke web
+#-------------------------------------------------------------
 def generateCourseJSON():
 	dump = json.dumps([course.__dict__ for course in courses])
 	print("di bawah saya dump \n")
