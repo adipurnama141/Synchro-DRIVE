@@ -52,6 +52,7 @@ class Course:
 			self.VIPRoom = 0
 		else:
 			self.VIPRoom = 1
+
 		self.roomIDX = 0
 		for room in rooms:
 			if room.name == self.roomName:
@@ -68,19 +69,28 @@ class Course:
 
 
 	def allocate(self):
+		print("memasuki algoritma alokasi")
+		print("mencoba alokasi -> " + self.name)
+		self.assignedHour = randint(1,11)
+		self.assignedDay = randint(1,5)
+		print(self.roomIDX)
+
 		please_execute_at_least_once = 0
 		while  ((self.isLecturerAvailable() * self.isRoomAvailable() * please_execute_at_least_once) == 0) :
+			#print("cek ulang")
 			please_execute_at_least_once = 1
 			self.assignedHour = randint(1,11)
 			self.assignedDay = randint(1,5)
 			if (not self.VIPRoom):
-				self.roomName = rooms[randint(0,len(rooms)-1)].name
-				self.roomIDX = 0
-				for room in rooms:
-					if room.name == self.roomName:
-						break
-					else:
-						self.roomIDX += 1
+				self.roomIDX = randint(0,len(rooms)-1)
+			else:
+				self.roomIDX = randint(0,len(rooms)-1)
+				while (not(self.roomName == rooms[self.roomIDX].name)):
+					self.roomIDX = randint(0,len(rooms)-1)
+
+
+			
+		
 
 
 
@@ -102,17 +112,18 @@ class Course:
 		if (dayOK and hourOpenOK and hourClosedOK):
 			return 1
 		else:
+			#print("dosen gak siap")
 			return 0
 
 	
 	def isRoomAvailable(self):
-		
 		dayOK = (rooms[self.roomIDX].availDay[self.assignedDay] == 1)
 		hourOpenOK = (self.assignedHour >= rooms[self.roomIDX].timeOpen)	
 		hourClosedOK = (self.assignedHour+int(self.timeDuration) <= (rooms[self.roomIDX].timeClosed + 1))
 		if (dayOK and hourOpenOK and hourClosedOK):
 			return 1
 		else:
+			#print("ruang gak ada")
 			return 0
 
 	def printAllocation(self):
@@ -144,6 +155,7 @@ def readFile(x):
 			elif (readingStatus == 2):
 				preprocess = content.split(";")
 				courses.append(Course(preprocess))
+	print("reading process is done")
 
 
 def conflictCheck():
@@ -187,10 +199,11 @@ def countTotalConflict():
 
 def hill():
 	'''Menggunakan algoritma hill climbing untuk memperoleh konflik sekecil mungkin'''
-	
+	print("memasuki algoritma hill")
 	#alokasi awal
 	for course in courses:
 		course.allocate()
+		
 	#algoritma hill
 	for course in courses:
 		conflictCheck()
@@ -500,4 +513,4 @@ def generateRoomJSON():
 	print(len(rooms))
 
 	return dump
-	
+
