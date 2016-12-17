@@ -1,2 +1,4 @@
 # Synchro-DRIVE
-Synchro-DRIVE project
+AI-powered scheduling system.
+Aplikasi penjadwalan mata kuliah menggunakan algoritma hill climbing, simulated annealing & genetic algorithm
+
